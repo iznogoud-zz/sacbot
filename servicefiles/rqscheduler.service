@@ -1,0 +1,10 @@
+[Unit]
+Description=ACBOT RQScheduler
+After=network.target
+
+[Service]
+ExecStart=/home/<<User>>/.virtualenvs/<<YourVirtualEnv>>/bin/python \
+    /home/<<User>>/.virtualenvs/<<YourVirtualEnv>>/lib/<<YourPythonVersion>>/site-packages/rq_scheduler/scripts/rqscheduler.py
+
+[Install]
+WantedBy=multi-user.target

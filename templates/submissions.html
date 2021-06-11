@@ -1,0 +1,41 @@
+<!doctype html>
+<title>ACBOT</title>
+
+<html>
+
+<body>
+    <table border="1">
+        <tbody>
+            <tr>
+                <th>Subreddit</th>
+                <th>Submission Title</th>
+                <th>Submission Author</th>
+                <th>Comment</th>
+                <th>Similarity</th>
+                <th>Action</th>
+            </tr>
+            {% for s_title, s_link, s_author, c_link, c_author, sim, action, sr_name in my_list %}
+            {% if action == "INVESTIGATE" %}
+            <tr bgcolor=#ebc634>
+                {% elif action == "IGNORE" %}
+            <tr bgcolor=#cccccc>
+                {% elif action == "MARK_CORRECTED" %}
+            <tr bgcolor=#85db6e>
+                {% else %}
+            <tr>
+                {% endif %}
+                <td>{{ sr_name }}</td>
+                <td><a href={{ s_link }} target="_blank" rel="noopener noreferrer">{{ s_title }} </a></td>
+                <td>{{ s_author }}</td>
+                <td><a href={{ c_link }} target="_blank" rel="noopener noreferrer">{{ c_author }}</td>
+                <td>{{ sim }}</td>
+                <td>{{ action }}</td>
+
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

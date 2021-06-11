@@ -1,0 +1,38 @@
+"WriteStreakPT":
+    "to_be_corrected_flair_id": "2360392c-bd3f-11eb-9619-0e91ce9de8e5"
+#    "corrected_flair_id": "25e9e6de-bd3f-11eb-81a6-0edbdca81731"
+#    "bot_comment": "Esta submissão foi automaticamente classificada com corrigida por um bot. Se discordar, por
+#    favor contacte os moderadores
+#    .\n\n**------------------------------------------------------------------------------------------------------**\n
+#    \nThis submission was automatically classified as corrected by a bot. If you disagree, please reach out to the
+#    mod team.\n\n**AutoCorrectBot**"
+#    "mod_team_message": "Hi, I am not sure but I think [comment](COMMENT_LINK) might be a correction for [this]
+#    (SUBMISSION_LINK) submission. I need the help of an human.\n\nBlip blop.\n\n**AutoCorrectBot**"
+    "similarity_correction_threshold": 0.15 # from 0 to 1, above marks post as corrected, default is 0.15
+    "similarity_investigate_threshold": 0.04 # from 0 to 1, above marks post as to be investigated, default is 0.04
+
+"WriteStreakGerman":
+    "to_be_corrected_flair_id": "2360392c-bd3f-11eb-9619-0e91ce9de8e5"
+#    "corrected_flair_id": "25e9e6de-bd3f-11eb-81a6-0edbdca81731"
+#    "bot_comment": "Esta submissão foi automaticamente classificada com corrigida por um bot. Se discordar, por
+#    favor contacte os moderadores
+#    .\n\n**------------------------------------------------------------------------------------------------------**\n
+#    \nThis submission was automatically classified as corrected by a bot. If you disagree, please reach out to the
+#    mod team.\n\n**AutoCorrectBot**"
+#    "mod_team_message": "Hi, I am not sure but I think [comment](COMMENT_LINK) might be a correction for [this]
+#    (SUBMISSION_LINK) submission. I need the help of an human.\n\nBlip blop.\n\n**AutoCorrectBot**"
+    "similarity_correction_threshold": 0.15 # from 0 to 1, above marks post as corrected, default is 0.15
+    "similarity_investigate_threshold": 0.04 # from 0 to 1, above marks post as to be investigated, default is 0.04
+
+"izno_bot_test":
+    "to_be_corrected_flair_id": "2360392c-bd3f-11eb-9619-0e91ce9de8e5"
+    "corrected_flair_id": "25e9e6de-bd3f-11eb-81a6-0edbdca81731"
+    "bot_comment": "Esta submissão foi automaticamente classificada com corrigida por um bot. Se discordar, por
+    favor contacte os moderadores
+    .\n\n**------------------------------------------------------------------------------------------------------**\n
+    \nThis submission was automatically classified as corrected by a bot. If you disagree, please reach out to the
+    mod team.\n\n**AutoCorrectBot**"
+    "mod_team_message": "Hi, I am not sure but I think [comment](COMMENT_LINK) might be a correction for [this]
+    (SUBMISSION_LINK) submission. I need the help of an human.\n\nBlip blop.\n\n**AutoCorrectBot**"
+    "similarity_correction_threshold": 0.15 # from 0 to 1, above marks post as corrected, default is 0.15
+    "similarity_investigate_threshold": 0.04 # from 0 to 1, above marks post as to be investigated, default is 0.04
