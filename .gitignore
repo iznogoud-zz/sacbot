@@ -2,3 +2,5 @@
 /bot-results*
 /praw.ini
 /.idea
+/acbot.log
+/acbot.sqlite

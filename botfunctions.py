@@ -1,25 +1,107 @@
+from logging.handlers import TimedRotatingFileHandler
+import sqlite3
+from sqlite3 import Error
 from datetime import date
 from difflib import SequenceMatcher
 
 import praw
 import yaml
+import logging
 
-DEFAULT_CORRECTED_THRESHOLD = 0.15
+DEFAULT_CORRECTED_THRESHOLD = 0.2
 DEFAULT_INVESTIGATE_THRESHOLD = 0.04
+DATABASE_FILE = "acbot.sqlite"
+
+
+def setup_log():
+    logger = logging.getLogger("acbot")
+    formatter = logging.Formatter('%(asctime)s | %(name)s |  %(levelname)s | %(message)s')
+    logger.setLevel(logging.DEBUG)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setFormatter(formatter)
+
+    logFilePath = "acbot.log"
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        filename=logFilePath, when='midnight', backupCount=30)
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.DEBUG)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+
+def create_database(db_file: str):
+    """ create a database connection to a SQLite database """
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+    except Error as e:
+        print("Could not open or create the database at: " + db_file)
+
+    c = conn.cursor()
+
+    c.execute("create table submissions ([id] integer primary key, [subreddit] text, [submission_id] text, "
+              "[submission_title] text, [submission_link] text, [submission_author] text, [comment_id] text, "
+              "[comment_link] text, [comment_author] text, [similarity] real, [action] text, [action_date] date)")
+
+    conn.commit()
+    conn.close()
+
+def open_db_connection(name = DATABASE_FILE):
+    log = logging.getLogger("acbot")
+    bot_db = None
+    try:
+        bot_db = sqlite3.connect(DATABASE_FILE)
+    except Error as e:
+        log.error("Could not open or create the database at: " + DATABASE_FILE)
+        return None
+
+    return bot_db
+
+def comment_already_processed(sub_id, comment_id):
+    bot_db = open_db_connection()
+
+    exists = bot_db.cursor().execute(f"SELECT EXISTS(SELECT 1 FROM SUBMISSIONS WHERE  submission_id = "
+                                   f"'{sub_id}' and comment_id = '{comment_id}');").fetchall()
+
+    bot_db.close()
+
+    return exists[0][0] == 1
+
+def insert_submission(sr_name, sub_id, sub_title, sub_link, sub_author, comment_id, comment_link, comment_author,
+                      similarity,
+                      action):
+    bot_db = open_db_connection()
+    c = bot_db.cursor()
+    log = logging.getLogger("acbot")
+    log.info(f"Submission {sub_id} on subreddit {sr_name} marked as {action}.")
+    log.debug((f"{sr_name}, {sub_id}, {sub_title}, {sub_link}, {sub_author}, {comment_id}, {comment_link}, "
+              f"{comment_author}, {similarity}, {action}, {date.today().strftime('%Y.%m.%d')}"))
+
+    insert_string = (f'insert into submissions (subreddit, submission_id, submission_title, submission_link, '
+              f'submission_author, comment_id, comment_link, comment_author, similarity, action, action_date) ' 
+              f'values ("{sr_name}", "{sub_id}", "{sub_title}", "{sub_link}", "{sub_author}", "{comment_id}", '
+              f'"{comment_link}", "{comment_author}", "{similarity}", "{action}", "{date.today().strftime("%Y.%m.%d")}")')
+
+    c.execute(insert_string)
+    bot_db.commit()
 
 
 def parse_comment(template, submission, comment):
     out_str = template.replace("COMMENT_LINK", f"https://reddit.com{comment.permalink}")
-    out_str = out_str.replace("SUBMISSION_LINK",submission.shortlink)
     out_str = out_str.replace("SUBMISSION_LINK", submission.shortlink)
     if hasattr(submission, "author"):
         out_str = out_str.replace("SUBMISSION_AUTHOR", submission.author.name)
     if hasattr(comment, "author"):
-        out_str = out_str.replace("SUBMISSION_AUTHOR", comment.author.name)
+        out_str = out_str.replace("COMMENT_AUTHOR", comment.author.name)
     return out_str
 
 
 def check_submissions():
+    log = logging.getLogger("acbot")
+
     pt = praw.Reddit("acbot")
     pt.validate_on_submit = True
 
@@ -27,23 +109,23 @@ def check_submissions():
     try:
         yaml_conf = yaml.safe_load(open("config.yaml", "r"))
     except yaml.YAMLError as exc:
-        print(exc)
-
-    results = []
+        log.error(exc)
+        return None
 
     for sr_name, sr_conf in yaml_conf.items():
-        print(sr_name)
+        log.info(f"Processing {sr_name}")
         idx = 1
         submissions = []
-        for s in pt.subreddit(sr_name).search(query=f"title:Streak", sort="new", time_filter="day", limit=None):
+        for s in pt.subreddit(sr_name).search(query=f"title:Streak", sort="new", time_filter="week", limit=None):
             if "to_be_corrected_flair_id" in sr_conf:
-                if hasattr(s, "link_flair_template_id") and s.link_flair_template_id == sr_conf["to_be_corrected_flair_id"]:
+                if hasattr(s, "link_flair_template_id") and s.link_flair_template_id == sr_conf[
+                    "to_be_corrected_flair_id"]:
                     submissions.append(s)
             else:
                 submissions.append(s)
 
         for s in submissions:
-            print(f"{sr_name} processing {idx}/{len(submissions)} {s.shortlink}")
+            log.debug(f"{sr_name} processing {idx}/{len(submissions)} {s.shortlink}")
             idx += 1
             s_text = s.selftext
             if hasattr(s, "author"):
@@ -52,59 +134,44 @@ def check_submissions():
                 s_author = "deleted"
 
             for c in s.comments:
+                action = "IGNORE"
                 if not hasattr(c, "removed") or not c.removed:
-                    c_text = c.body
-
-                    similarity = SequenceMatcher(None, s_text, c_text).ratio()
-
-                    if hasattr(c, "author"):
-                        author = c.author.name
+                    if comment_already_processed(s.id, c.id):
+                        log.debug(f"Comment: https://reddit.com{c.permalink} already marked as correction for "
+                                  f"submission: {s.shortlink}")
                     else:
-                        author = "deleted"
+                        log.debug(f"Processing comment https://reddit.com{c.permalink}.")
+                        c_text = c.body
 
-                    if "similarity_correction_threshold" in sr_conf and similarity > sr_conf[
-                        "similarity_correction_threshold"] or similarity > DEFAULT_CORRECTED_THRESHOLD:
-                        action = "MARK_CORRECTED"
+                        similarity = SequenceMatcher(None, s_text, c_text).ratio()
 
-                        if "bot_comment" in sr_conf:
-                            s.reply(sr_conf["bot_comment"])
+                        if hasattr(c, "author"):
+                            c_author = c.author.name
+                        else:
+                            c_author = "deleted"
 
-                        if "corrected_flair_id" in sr_conf:
-                            s.flair.select(sr_conf["corrected_flair_id"])
+                        if "similarity_correction_threshold" in sr_conf and similarity > sr_conf[
+                            "similarity_correction_threshold"] or similarity > DEFAULT_CORRECTED_THRESHOLD:
 
-                    elif "similarity_investigate_threshold" in sr_conf and similarity > sr_conf[
-                        "similarity_investigate_threshold"] or similarity > DEFAULT_INVESTIGATE_THRESHOLD:
-                        action = "INVESTIGATE"
+                            action = "CORRECTED"
 
-                        if "mod_team_message" in sr_conf:
-                            s.subreddit.message("Potential correction.", parse_comment(sr_conf[
-                                "mod_team_message"], s, c))
-                    else:
-                        action = "IGNORE"
+                            if "bot_comment" in sr_conf:
+                                log.debug(f"Commenting that the submission was marked as correct.")
+                                s.reply(parse_comment(sr_conf["bot_comment"], s, c))
 
-                    if action != "IGNORE":
-                        res = [
-                            s.title,
-                            s.shortlink,
-                            s_author,
-                            f"https://reddit.com{c.permalink}",
-                            author,
-                            f"{similarity * 100:.2f}",
-                            action,
-                            sr_name,
-                        ]
+                            if "corrected_flair_id" in sr_conf:
+                                log.debug(f"Setting corrected flair.")
+                                s.flair.select(sr_conf["corrected_flair_id"])
 
-                        print(res)
-                        results.append(
-                            res
-                        )
+                        elif "similarity_investigate_threshold" in sr_conf and similarity > sr_conf[
+                            "similarity_investigate_threshold"] or similarity > DEFAULT_INVESTIGATE_THRESHOLD:
+                            action = "INVESTIGATE"
 
-                    if action == "MARK_CORRECTED":
-                        break  # Found one comment that corrects this submission
+                            if "mod_team_message" in sr_conf:
+                                log.debug(f"Sending message to moderators of {sr_name}")
+                                s.subreddit.message("Potential correction.", parse_comment(sr_conf[
+                                                                                               "mod_team_message"], s, c))
 
-    filename = f"bot-results-{date.today().strftime('%Y.%m.%d')}.log"
-    with open(filename, "a") as results_file:
-        for l in results:
-            results_file.write(f"{';'.join(e for e in l)}\n")
-
-    return results
+                        insert_submission(sr_name, s.id,  s.title, s.shortlink, s_author, c.id,
+                                          f"https://reddit.com{c.permalink}", c_author,
+                                          similarity, action)

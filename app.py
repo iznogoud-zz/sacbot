@@ -12,6 +12,7 @@ def get_render_data():
     job = Job.fetch("praw", connection=Redis())
     return job.result
 
+
 def get_data(year, month, day):
     out = []
     filename = f"bot-results-{year}.{month}.{day}.log"
