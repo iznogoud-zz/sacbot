@@ -1,3 +1,4 @@
+import logging
 import os
 import signal
 import time
@@ -10,7 +11,8 @@ stop_bot = False
 
 
 def sigterm_handler(_signo, _stack_frame):
-    print("Shutting down")
+    log = logging.getLogger("acbot")
+    log.info("Shutting down")
     global stop_bot
     stop_bot = True
 
