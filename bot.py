@@ -4,7 +4,7 @@ import time
 
 from botfunctions import check_submissions, create_database, DATABASE_FILE, setup_log
 
-UPDATE_TIMEOUT = 10
+UPDATE_TIMEOUT = 600
 
 stop_bot = False
 

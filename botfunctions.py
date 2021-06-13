@@ -1,15 +1,15 @@
 from logging.handlers import TimedRotatingFileHandler
 import sqlite3
 from sqlite3 import Error
-from datetime import date
+from datetime import datetime
 from difflib import SequenceMatcher
 
 import praw
 import yaml
 import logging
 
-DEFAULT_CORRECTED_THRESHOLD = 0.2
-DEFAULT_INVESTIGATE_THRESHOLD = 0.04
+DEFAULT_CORRECTED_THRESHOLD = 0.5
+DEFAULT_INVESTIGATE_THRESHOLD = 0.2
 DATABASE_FILE = "acbot.sqlite"
 
 
@@ -44,7 +44,7 @@ def create_database(db_file: str):
 
     c.execute("create table submissions ([id] integer primary key, [subreddit] text, [submission_id] text, "
               "[submission_title] text, [submission_link] text, [submission_author] text, [comment_id] text, "
-              "[comment_link] text, [comment_author] text, [similarity] real, [action] text, [action_date] date)")
+              "[comment_link] text, [comment_author] text, [similarity] real, [action] text, [action_date] text)")
 
     conn.commit()
     conn.close()
@@ -78,15 +78,17 @@ def insert_submission(sr_name, sub_id, sub_title, sub_link, sub_author, comment_
     log = logging.getLogger("acbot")
     log.info(f"Submission {sub_id} on subreddit {sr_name} marked as {action}.")
     log.debug((f"{sr_name}, {sub_id}, {sub_title}, {sub_link}, {sub_author}, {comment_id}, {comment_link}, "
-              f"{comment_author}, {similarity}, {action}, {date.today().strftime('%Y.%m.%d')}"))
+              f"{comment_author}, {similarity}, {action}, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"))
 
     insert_string = (f'insert into submissions (subreddit, submission_id, submission_title, submission_link, '
               f'submission_author, comment_id, comment_link, comment_author, similarity, action, action_date) ' 
               f'values ("{sr_name}", "{sub_id}", "{sub_title}", "{sub_link}", "{sub_author}", "{comment_id}", '
-              f'"{comment_link}", "{comment_author}", "{similarity}", "{action}", "{date.today().strftime("%Y.%m.%d")}")')
+              f'"{comment_link}", "{comment_author}", "{similarity*100:.2f}", "{action}", "'
+              f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}")')
 
     c.execute(insert_string)
     bot_db.commit()
+    bot_db.close()
 
 
 def parse_comment(template, submission, comment):
@@ -117,9 +119,8 @@ def check_submissions():
         idx = 1
         submissions = []
         for s in pt.subreddit(sr_name).search(query=f"title:Streak", sort="new", time_filter="week", limit=None):
-            if "to_be_corrected_flair_id" in sr_conf:
-                if hasattr(s, "link_flair_template_id") and s.link_flair_template_id == sr_conf[
-                    "to_be_corrected_flair_id"]:
+            if "corrected_flair_id" in sr_conf:
+                if hasattr(s, "link_flair_template_id") and s.link_flair_template_id != sr_conf["corrected_flair_id"]:
                     submissions.append(s)
             else:
                 submissions.append(s)
@@ -137,8 +138,7 @@ def check_submissions():
                 action = "IGNORE"
                 if not hasattr(c, "removed") or not c.removed:
                     if comment_already_processed(s.id, c.id):
-                        log.debug(f"Comment: https://reddit.com{c.permalink} already marked as correction for "
-                                  f"submission: {s.shortlink}")
+                        log.debug(f"Comment: https://reddit.com{c.permalink} already processed.")
                     else:
                         log.debug(f"Processing comment https://reddit.com{c.permalink}.")
                         c_text = c.body
@@ -150,21 +150,27 @@ def check_submissions():
                         else:
                             c_author = "deleted"
 
-                        if "similarity_correction_threshold" in sr_conf and similarity > sr_conf[
-                            "similarity_correction_threshold"] or similarity > DEFAULT_CORRECTED_THRESHOLD:
+                        corrected_threshold = DEFAULT_CORRECTED_THRESHOLD
+                        investigate_threshold = DEFAULT_INVESTIGATE_THRESHOLD
 
+                        if "similarity_correction_threshold" in sr_conf:
+                            corrected_threshold = sr_conf["similarity_correction_threshold"]
+
+                        if "similarity_investigate_threshold" in sr_conf:
+                            investigate_threshold = sr_conf["similarity_investigate_threshold"]
+
+                        if similarity > corrected_threshold:
                             action = "CORRECTED"
 
                             if "bot_comment" in sr_conf:
                                 log.debug(f"Commenting that the submission was marked as correct.")
                                 s.reply(parse_comment(sr_conf["bot_comment"], s, c))
 
-                            if "corrected_flair_id" in sr_conf:
-                                log.debug(f"Setting corrected flair.")
-                                s.flair.select(sr_conf["corrected_flair_id"])
+                                if "corrected_flair_id" in sr_conf:
+                                    log.debug(f"Setting corrected flair.")
+                                    s.flair.select(sr_conf["corrected_flair_id"])
 
-                        elif "similarity_investigate_threshold" in sr_conf and similarity > sr_conf[
-                            "similarity_investigate_threshold"] or similarity > DEFAULT_INVESTIGATE_THRESHOLD:
+                        elif similarity > investigate_threshold:
                             action = "INVESTIGATE"
 
                             if "mod_team_message" in sr_conf:
