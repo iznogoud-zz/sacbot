@@ -1,10 +1,10 @@
 [Unit]
-Description=BOTAC App
+Description=SACBOT bot service
 After=network.target
 
 [Service]
 WorkingDirectory=/home/<<User>>/<<install_dir>>
-ExecStart=/home/ubuntu/<<User>>/.virtualenvs/<<YourVirtualEnv>>/bin/waitress-serve --call "acbot:create_ac_bot"
+ExecStart=/home/<<User>>/<<install_dir>>/venv/bin/python bot.py
 Restart=always
 
 [Install]
