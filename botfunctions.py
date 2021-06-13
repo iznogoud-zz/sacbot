@@ -19,7 +19,7 @@ def setup_log():
     logger.setLevel(logging.DEBUG)
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(formatter)
 
     logFilePath = "acbot.log"
