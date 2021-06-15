@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<style>
+    .table1 {
+        border: 1px solid black;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table1 tr {
+        border: 1px solid black;
+    }
+
+    .table1 td {
+        border: 1px solid black;
+    }
+
+    .table1 th {
+        border: 1px solid black;
+    }
+
+    .table2 tr {
+        border: 0px solid black;
+    }
+
+    .table2 td {
+        border: 0px solid black;
+    }
+
+    .table2 th {
+        border: 0px solid black;
+    }
+
+    textarea {
+        display: block;
+        width: 99%;
+        height: 300px;
+        resize: none;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <title>ACBOT Configuration</title>
+</head>
+
+<body>
+    <form action="{{ url_for('acbot_save_conf') }}" id=main_form" method="POST">
+        <table class="table2">
+            <tbody>
+                <tr>
+                    <td><a href=new_conf>
+                            <button style="height: 40px;width: 200px" type="button">Add Configuration</button>
+                        </a></td>
+                    <td><a href=save_conf>
+                            <button style="height: 40px;width: 200px" type="submit">Save Configuration</button>
+                        </a></td>
+                    <td><a href= />
+                        <button style="height: 40px;width: 200px" type="button">Home</button>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table1">
+            <tbody>
+                <tr>
+                    <th>Subreddit</th>
+                    <th>Corrected Flair ID</th>
+                    <th>Comment</th>
+                    <th>Mod Message</th>
+                    <th>Correction Threshold</th>
+                    <th>Investigate Threshold</th>
+                    <th>Active</th>
+                    <th>Delete</th>
+                </tr>
+
+                {% for cid, subreddit, flair, comment, mod_msg, c_threshold, i_threshold, active in sr_list %}
+                <tr>
+                    {% set sr_name = "subreddit-"~cid %}
+                    {% set fl_name = "corrected_flair_id-"~cid %}
+                    {% set c_name = "comment-"~cid %}
+                    {% set mm_name = "mod_message-"~cid %}
+                    {% set ct_name = "correction_threshold-"~cid %}
+                    {% set it_name = "investigate_threshold-"~cid %}
+                    {% set ac_name = "active-"~cid %}
+                    {% set del_name = "del-"~cid %}
+                    <td style="width: 10%"><textarea name={{ sr_name }}>{{ subreddit }}</textarea></td>
+                    <td style="width: 15%"><textarea name={{ fl_name }}>{{ flair }}</textarea></td>
+                    <td style="width: 30%"><textarea name={{ c_name }}>{{ comment }}</textarea></td>
+                    <td style="width: 30%"><textarea name={{ mm_name }}>{{ mod_msg }}</textarea></td>
+                    <td style="width: 5%"><textarea name={{ ct_name }}>{{ c_threshold }}</textarea></td>
+                    <td style="width: 5%"><textarea name={{ it_name }}>{{ i_threshold }}</textarea></td>
+                    <td style="width: 5%"><input type="checkbox" name={{ac_name}} value={{ active }}></td>
+                    <td style="width: 5%"><input type="checkbox" name={{del_name}} value="true"></td>
+                </tr>
+                {% endfor %}
+
+        </table>
+    </form>
+</body>
+
+</html>

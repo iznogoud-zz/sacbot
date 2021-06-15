@@ -2,5 +2,7 @@
 /bot-results*
 /praw.ini
 /.idea
-/acbot.log
+/acbot.log*
 /acbot.sqlite
+.vscode/
+__pycache__/

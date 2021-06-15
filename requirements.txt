@@ -2,3 +2,6 @@ Flask
 praw
 PyYAML
 gunicorn
+pony
+markdown
+bs4
