@@ -26,7 +26,7 @@ def setup_log():
     logger.setLevel(logging.DEBUG)
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(formatter)
 
     # logFilePath = "acbot.log"
@@ -71,24 +71,43 @@ def get_submissions():
         sr_conf = select(c for c in Configuration)[:]
 
     for conf in sr_conf:
-        log.info(f"Processing {conf.subreddit}")
-        idx = 1
 
-        for s in pt.subreddit(conf.subreddit).search(
-            query=f"title:Streak", sort="new", time_filter="week", limit=None
-        ):
+        processed_subs = 0
+        no_comments = 0
+        total_subs = 0
+        corrected = 0
+
+        subs = pt.subreddit(conf.subreddit).search(query=f"title:Streak", sort="hot", time_filter="day", limit=None)
+
+        for s in subs:
+            total_subs += 1
             if s.num_comments > 0:
                 if conf.corrected_flair_id != "":
-                    if hasattr(s, "link_flair_template_id") and s.link_flair_template_id != conf.corrected_flair_id:
+                    # log.info(f"Processing {s.title} {s.shortlink}")
+                    if hasattr(s, "link_flair_template_id"):
+                        if s.link_flair_template_id != conf.corrected_flair_id:
+                            process_submission(s)
+                            processed_subs += 1
+                        else:
+                            corrected += 1
+                    else:
                         process_submission(s)
+                        processed_subs += 1
                 else:
                     process_submission(s)
+                    processed_subs += 1
+            else:
+                no_comments += 1
+
+        log.info(
+            f"Processed {processed_subs} submissions of {total_subs} ({no_comments} had no comments) ({corrected} were corrected)in {conf.subreddit}"
+        )
 
 
 def process_submission(s):
 
     idx = 0
-    log.debug(f"{s.subreddit.display_name} processing {s.shortlink}")
+    log.debug(f"Processing {s.title} {s.shortlink}")
     idx += 1
     s_text = s.selftext
     if hasattr(s, "author"):
