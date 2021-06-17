@@ -26,7 +26,7 @@ def setup_log():
     logger.setLevel(logging.DEBUG)
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.DEBUG)
     stream_handler.setFormatter(formatter)
 
     # logFilePath = "acbot.log"
@@ -62,13 +62,11 @@ def parse_comment(template, submission, comment):
     return out_str
 
 
-def get_submissions():
-    pt = praw.Reddit("acbot")
-    pt.validate_on_submit = True
+def get_submissions(reddit, subreddit):
 
     sr_conf = None
     with db_session:
-        sr_conf = select(c for c in Configuration)[:]
+        sr_conf = select(c for c in Configuration if c.subreddit == subreddit)[:]
 
     for conf in sr_conf:
 
@@ -115,6 +113,8 @@ def process_submission(s):
     else:
         s_author = "deleted"
 
+    correction_authors = []
+
     for c in s.comments:
         action = "IGNORE"
         if not hasattr(c, "removed") or not c.removed:
@@ -153,6 +153,8 @@ def process_submission(s):
 
                 if similarity > corrected_threshold:
                     action = "CORRECTED"
+
+                    correction_authors.append(c_author)
 
                     if sr_conf.comment != "":
                         log.debug(f"Commenting that the submission was marked as correct.")
