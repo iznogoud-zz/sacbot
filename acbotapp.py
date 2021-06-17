@@ -6,7 +6,7 @@ from flask import Flask, render_template, redirect, request
 from pony.orm import db_session
 from pony.orm.core import select
 
-from acbotdb import get_data, get_last_24h, populate, add_new_configuration, Configuration, acbotdb
+from acbotdb import get_data, get_last_24h, get_sr_data, populate, add_new_configuration, Configuration, acbotdb
 from config import DATABASE_FILE
 
 app = Flask(__name__)
