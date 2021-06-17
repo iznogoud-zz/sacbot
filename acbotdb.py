@@ -91,6 +91,26 @@ def get_data(year, month, day):
         return data
 
 
+def get_sr_data(subreddit):
+    with db_session:
+        data = select(
+            (
+                c.submission_title,
+                c.submission_link,
+                c.submission_author,
+                c.link,
+                c.author,
+                c.similarity,
+                c.action,
+                c.subreddit,
+                c.date,
+            )
+            for c in Comment
+            if c.subreddit == subreddit
+        )[:]
+        return data
+
+
 def get_last_24h():
     with db_session:
         data = select(

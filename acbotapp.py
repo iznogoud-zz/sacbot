@@ -31,6 +31,11 @@ def acbot_today():
     return render_template("submissions.html", my_list=get_last_24h())
 
 
+@app.route("/<subreddit>")
+def acbot_sr(subreddit):
+    return render_template("submissions.html", my_list=get_sr_data(subreddit))
+
+
 @app.route("/<year>/<month>/<day>")
 def acbot_date(year, month, day):
     return render_template("submissions.html", my_list=get_data(int(year), int(month), int(day)))
