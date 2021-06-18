@@ -5,3 +5,5 @@ gunicorn
 pony
 markdown
 bs4
+python-Levenshtein
+wheel

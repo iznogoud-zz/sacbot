@@ -12,6 +12,7 @@ import threading
 from praw.models import Comment as RedditComment
 from praw.models import Submission as RedditSubmission
 from pony.orm.core import ObjectNotFound, db_session, select
+from Levenshtein import ratio
 
 import praw
 
@@ -78,7 +79,8 @@ class ACBotThread(Thread):
 
                 submission: RedditSubmission = comment.submission
 
-                similarity = SequenceMatcher(None, md_to_text(submission.selftext), md_to_text(comment.body)).ratio()
+                # similarity = SequenceMatcher(None, md_to_text(submission.selftext), md_to_text(comment.body)).ratio()
+                similarity = ratio(submission.selftext, comment.body)
 
                 if hasattr(comment, "author"):
                     c_author = comment.author.name
