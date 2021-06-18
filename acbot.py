@@ -38,7 +38,13 @@ class ACBotThread(Thread):
                 self.log.info(f"Thread [{self.name}] sleeping {UPDATE_TIMEOUT} sec.")
                 self._stop_th.wait(UPDATE_TIMEOUT)
             elif comment.is_root:
-                self.process_comment(comment)
+                if hasattr(comment.submission, "link_flair_template_id"):
+                    if comment.submssion.link_flair_template_id == self.conf.corrected_flair_id:
+                        self.log.debug(f"Submision [{comment.submssion.id}] already corrected.")
+                    else:
+                        self.process_comment(comment)
+                else:
+                    self.process_comment(comment)
 
             if self._stop_th.is_set():
                 break
@@ -57,7 +63,7 @@ class ACBotThread(Thread):
                 self.log.debug(f"Comment: {comment.id} on {comment.subreddit.display_name} already processed.")
             else:
                 self.log.debug(
-                    f"Processing comment [{comment.subreddit.display_name}]{comment.id} at https://reddit.com{comment.permalink}."
+                    f"{comment.subreddit.display_name}:: Processing comment [{comment.id}] at https://reddit.com{comment.permalink}."
                 )
 
                 submission: RedditSubmission = comment.submission
@@ -81,22 +87,29 @@ class ACBotThread(Thread):
                 if similarity > corrected_threshold:
                     action = "CORRECTED"
 
+                    self.log.debug(f"Comment [{comment.id}] corrects submission [{submission.id}].")
+
                     if self.conf.comment != "":
-                        self.log.debug(f"Added comment to submission {submission.id}.")
+                        self.log.debug(f"Added correctes comment to submission [{submission.id}].")
                         # submission.reply(parse_comment(self.conf.comment, submission, comment))
 
                         if self.conf.corrected_flair_id:
-                            self.log.debug(f"Setting corrected flair on {submission.id}.")
+                            self.log.debug(f"Setting corrected flair on submission [{submission.id}].")
                             # submission.flair.select(self.conf.corrected_flair_id)
 
                 elif similarity > investigate_threshold:
                     action = "INVESTIGATE"
+
+                    self.log.debug(f"Comment [{comment.id}] should be manually verified.")
 
                     if self.conf.mod_message != "":
                         self.log.debug(f"Sending message to moderators of {submission.subreddit.display_name}")
                         # submission.subreddit.message(
                         #     "Potential correction.", parse_comment(self.conf.mod_message, submission, comment)
                         # )
+
+                else:
+                    self.log.debug(f"Ignoring comment [{comment.id}].")
 
                 if hasattr(submission, "author"):
                     s_author = submission.author.name
