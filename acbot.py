@@ -2,6 +2,7 @@ from datetime import datetime
 from difflib import SequenceMatcher
 
 from prawcore.auth import TrustedAuthenticator
+from prawcore.exceptions import RequestException
 from acbotdb import Comment, Configuration
 import logging
 import time
@@ -33,23 +34,27 @@ class ACBotThread(Thread):
         self._stop_th.set()
 
     def run(self) -> None:
-        for comment in self.reddit.subreddit(self.conf.subreddit).stream.comments(pause_after=0):
-            if comment is None:
-                self.log.info(f"Thread [{self.name}] sleeping {UPDATE_TIMEOUT} sec.")
-                self._stop_th.wait(UPDATE_TIMEOUT)
-            elif comment.is_root:
-                if hasattr(comment.submission, "link_flair_template_id"):
-                    if comment.submission.link_flair_template_id == self.conf.corrected_flair_id:
-                        self.log.debug(
-                            f"Submission [{comment.submission.id}] already corrected. Ignoring [{comment.id}]"
-                        )
+        self.check_comments()
+        self.log.info(f"Thread [{self.name}] sleeping {UPDATE_TIMEOUT} sec.")
+        self._stop_th.wait(UPDATE_TIMEOUT)
+
+    def check_comments(self):
+        try:
+            for comment in self.reddit.subreddit(self.conf.subreddit).stream.comments(pause_after=0):
+                if comment is None:
+                    break
+                elif comment.is_root:
+                    if hasattr(comment.submission, "link_flair_template_id"):
+                        if comment.submission.link_flair_template_id == self.conf.corrected_flair_id:
+                            self.log.debug(
+                                f"Submission [{comment.submission.id}] already corrected. Ignoring [{comment.id}]"
+                            )
+                        else:
+                            self.process_comment(comment)
                     else:
                         self.process_comment(comment)
-                else:
-                    self.process_comment(comment)
-
-            if self._stop_th.is_set():
-                break
+        except RequestException as e:
+            self.log.warning(e)
 
     def process_comment(self, comment: RedditComment):
         action = "IGNORE"
