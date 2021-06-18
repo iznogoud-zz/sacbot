@@ -48,15 +48,16 @@ class ACBotThread(Thread):
                     else:
                         break
                 elif comment.is_root:
-                    if hasattr(comment.submission, "link_flair_template_id"):
-                        if comment.submission.link_flair_template_id == self.conf.corrected_flair_id:
-                            self.log.debug(
-                                f"Submission [{comment.submission.id}] already corrected. Ignoring [{comment.id}]"
-                            )
+                    if "streak" in comment.submission.title.lower():
+                        if hasattr(comment.submission, "link_flair_template_id"):
+                            if comment.submission.link_flair_template_id == self.conf.corrected_flair_id:
+                                self.log.debug(
+                                    f"Submission [{comment.submission.id}] already corrected. Ignoring [{comment.id}]"
+                                )
+                            else:
+                                self.process_comment(comment)
                         else:
                             self.process_comment(comment)
-                    else:
-                        self.process_comment(comment)
         except RequestException as e:
             self.log.warning(e)
 
