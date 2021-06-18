@@ -87,7 +87,7 @@ def get_data(year, month, day):
             )
             for c in Comment
             if c.date == datetime(year, month, day)
-        )[:]
+        ).order_by(-9)[:]
         return data
 
 
@@ -107,7 +107,7 @@ def get_sr_data(subreddit):
             )
             for c in Comment
             if c.subreddit == subreddit
-        )[:]
+        ).order_by(-9)[:]
         return data
 
 
@@ -127,5 +127,5 @@ def get_last_24h():
             )
             for c in Comment
             if c.date >= (datetime.now() - timedelta(days=1))
-        )[:]
+        ).order_by(-9)[:]
         return data
