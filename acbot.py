@@ -34,15 +34,18 @@ class ACBotThread(Thread):
         self._stop_th.set()
 
     def run(self) -> None:
-        self.check_comments()
-        self.log.info(f"Thread [{self.name}] sleeping {UPDATE_TIMEOUT} sec.")
-        self._stop_th.wait(UPDATE_TIMEOUT)
+        while not self._stop_th.is_set():
+            self.check_comments()
 
     def check_comments(self):
         try:
             for comment in self.reddit.subreddit(self.conf.subreddit).stream.comments(pause_after=0):
                 if comment is None:
-                    break
+                    if not self._stop_th.is_set():
+                        self.log.info(f"Thread [{self.name}] sleeping {UPDATE_TIMEOUT} sec.")
+                        self._stop_th.wait(UPDATE_TIMEOUT)
+                    else:
+                        break
                 elif comment.is_root:
                     if hasattr(comment.submission, "link_flair_template_id"):
                         if comment.submission.link_flair_template_id == self.conf.corrected_flair_id:
