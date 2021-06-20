@@ -1,0 +1,18 @@
+{
+    "listeners": {
+        "127.0.0.1:8888": {
+            "pass": "applications/flask"
+        }
+    },
+    "applications": {
+        "flask": {
+            "type": "python 3.8",
+            "path": "/home/ubuntu/sacbot",
+            "home": "/home/ubuntu/sacbot/venv/",
+            "module": "acbotapp",
+            "callable": "app",
+            "user": "ubuntu",
+            "group": "ubuntu"
+        }
+    }
+}

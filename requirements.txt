@@ -1,9 +1,11 @@
 Flask
 praw
 PyYAML
-gunicorn
+wsgi
 pony
 markdown
 bs4
 python-Levenshtein
 wheel
+
+#nginx unit and unit-python are also needed to run the webapp

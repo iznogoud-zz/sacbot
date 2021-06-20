@@ -69,6 +69,10 @@ def acbot_new_conf():
 @app.route("/save_conf", methods=["POST"])
 @db_session
 def acbot_save_conf():
+
+    for c in select(c for c in Configuration)[:]:
+        c.active = False
+
     for name, val in request.form.items():
         f_name, c_idx = name.split("-")
         if f_name == "del" and val == "true":

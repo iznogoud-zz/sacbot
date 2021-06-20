@@ -90,14 +90,20 @@
                     {% set it_name = "investigate_threshold-"~cid %}
                     {% set ac_name = "active-"~cid %}
                     {% set del_name = "del-"~cid %}
+
+                    {% if active == True %}
+                    {% set active_value = "checked" %}
+                    {% else %}
+                    {% set active_value = "" %}
+                    {% endif %}
                     <td style="width: 10%"><textarea name={{ sr_name }}>{{ subreddit }}</textarea></td>
                     <td style="width: 15%"><textarea name={{ fl_name }}>{{ flair }}</textarea></td>
                     <td style="width: 30%"><textarea name={{ c_name }}>{{ comment }}</textarea></td>
                     <td style="width: 30%"><textarea name={{ mm_name }}>{{ mod_msg }}</textarea></td>
                     <td style="width: 5%"><textarea name={{ ct_name }}>{{ c_threshold }}</textarea></td>
                     <td style="width: 5%"><textarea name={{ it_name }}>{{ i_threshold }}</textarea></td>
-                    <td style="width: 5%"><input type="checkbox" name={{ac_name}} value={{ active }}></td>
-                    <td style="width: 5%"><input type="checkbox" name={{del_name}} value="true"></td>
+                    <td style="width: 5%"><input type="checkbox" name={{ac_name}} {{ active_value }}></td>
+                    <td style="width: 5%"><input type="checkbox" name={{del_name}}></td>
                 </tr>
                 {% endfor %}
 
