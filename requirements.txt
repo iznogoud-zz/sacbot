@@ -7,5 +7,6 @@ markdown
 bs4
 python-Levenshtein
 wheel
+flask_redis
 
 #nginx unit and unit-python are also needed to run the webapp

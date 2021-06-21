@@ -1,3 +1,4 @@
+from acconfthread import ACConfThread
 from acbothread import ACBotThread
 from acbotdb import Configuration
 import logging
@@ -28,15 +29,14 @@ def setup_log():
 
 
 stop_bot = False
-bot_threads = []
+th = None
 
 
 def sigterm_handler(_signo, _stack_frame):
     log = logging.getLogger("acbot")
     log.info("Shutting down")
 
-    for th in bot_threads:
-        th.stop()
+    th.stop()
 
 
 if __name__ == "__main__":
@@ -44,11 +44,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, sigterm_handler)
     setup_log()
 
-    with db_session:
-        for c in select(c for c in Configuration)[:]:
-            th = ACBotThread(c)
-            th.start()
-            bot_threads.append(th)
-
-    for th in bot_threads:
-        th.join()
+    th = ACConfThread()
+    th.start()
+    th.join()

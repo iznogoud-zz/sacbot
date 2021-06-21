@@ -70,7 +70,12 @@ class ACBotThread(Thread):
 
     def process_comment(self, comment: RedditComment):
         action = "IGNORE"
-        if not hasattr(comment, "removed") or not comment.removed:
+
+        if (
+            (not hasattr(comment, "removed") or not comment.removed)
+            and comment.author is not None
+            and comment.body != "[removed]"
+        ):
             dbc = None
             with db_session:
                 try:
@@ -111,12 +116,18 @@ class ACBotThread(Thread):
                     if self.conf.comment != "":
                         self.log.debug(f"Added corrected comment to submission [{submission.id}].")
                         if self.conf.active:
-                            submission.reply(self.parse_comment(self.conf.comment, submission, comment))
+                            try:
+                                submission.reply(self.parse_comment(self.conf.comment, submission, comment))
+                            except Exception as e:
+                                self.log.error(e)
 
                         if self.conf.corrected_flair_id:
                             self.log.debug(f"Setting corrected flair on submission [{submission.id}].")
                             if self.conf.active:
-                                submission.flair.select(self.conf.corrected_flair_id)
+                                try:
+                                    submission.flair.select(self.conf.corrected_flair_id)
+                                except Exception as e:
+                                    self.log.error(e)
 
                 elif similarity > investigate_threshold:
                     action = "INVESTIGATE"
@@ -126,9 +137,13 @@ class ACBotThread(Thread):
                     if self.conf.mod_message != "":
                         self.log.debug(f"Sending message to moderators of {submission.subreddit.display_name}")
                         if self.conf.active:
-                            submission.subreddit.message(
-                                "Potential correction.", self.parse_comment(self.conf.mod_message, submission, comment)
-                            )
+                            try:
+                                submission.subreddit.message(
+                                    "Potential correction.",
+                                    self.parse_comment(self.conf.mod_message, submission, comment),
+                                )
+                            except Exception as e:
+                                self.log.error(e)
 
                 else:
                     self.log.debug(f"Ignoring comment [{comment.id}].")

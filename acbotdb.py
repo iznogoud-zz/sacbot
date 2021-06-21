@@ -86,7 +86,7 @@ def get_data(year, month, day):
                 c.date,
             )
             for c in Comment
-            if c.date == datetime(year, month, day)
+            if c.date >= datetime(year, month, day) and c.date < datetime(year, month, day + 1)
         ).order_by(-9)[:]
         return data
 
