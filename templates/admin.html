@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<style>
+    .table1 {
+        border: 1px solid black;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table1 tr {
+        border: 1px solid black;
+    }
+
+    .table1 td {
+        border: 1px solid black;
+    }
+
+    .table1 th {
+        border: 1px solid black;
+    }
+
+    .table2 tr {
+        border: 0px solid black;
+    }
+
+    .table2 td {
+        border: 0px solid black;
+    }
+
+    .table2 th {
+        border: 0px solid black;
+    }
+
+    textarea {
+        display: block;
+        width: 99%;
+        height: 300px;
+        resize: none;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .button {
+        height: 40px;
+        width: 200px;
+    }
+</style>
+
+<body>
+    <div>
+        <h1 style="color: red;">Beware monsters ahead!</h1>
+    </div>
+    <div>
+        <h3 style="color: blue;">Reapplies all of the previously processed comments. Usefull, when thresholds have been
+            altered.</h3>
+    </div>
+    <div>
+        <form action="{{ url_for('acbot_reprocess_sub') }}" id=main_form" method="POST">
+            <table class="table2">
+                <tr>
+                    <td><label class="button">Subreddit:</label></td>
+                    <td>
+                        <select class="button" name="sub">
+                            {% for sub in conf_list %}
+                            <option value={{sub}}>{{sub}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><a href=reprocess_sub>
+                            <button class="button" type="submit">Reprocess Subreddit</button>
+                        </a></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div>
+        <h3 style="color: blue;">Manually force the a submission to be processed.</h3>
+    </div>
+    <div>
+        <form action="{{ url_for('acbot_process_submission') }}" id=main_form" method="POST">
+            <table class="table2">
+                <tr>
+                    <td><label class="button">Submission ID:</label></td>
+                    <td>
+                        <input class="button" type="text" name="subid">
+                    </td>
+                    <td><a href=process_submission>
+                            <button class="button" type="submit">Process Submission</button>
+                        </a></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+
+</html>

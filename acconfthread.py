@@ -29,18 +29,18 @@ class ACConfThread(Thread):
             if refresh_conf is not None and refresh_conf.decode() == "True":
                 self.log.info("New configuration. Refreshing threads.")
 
-                self.stop_threads()
-                self.start_threads()
+                for _, th in self.bot_threads.items():
+                    th.update_conf()
 
                 self.redis.set("refresh-config", "False")
 
-            self._stop_th.wait(1)
+            self._stop_th.wait(2)
 
     def start_threads(self):
         with db_session:
             _temp_conf = select(c for c in Configuration)[:]
             for c in _temp_conf:
-                th = ACBotThread(c)
+                th = ACBotThread(c.subreddit)
                 th.start()
                 self.bot_threads.update({c.subreddit: th})
 

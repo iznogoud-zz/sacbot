@@ -75,6 +75,25 @@ def acbot_save_conf():
     return redirect("/config")
 
 
+@app.route("/admin")
+@db_session
+def acbot_admin():
+    configs = select((c.subreddit,) for c in Configuration)[:]
+    return render_template("admin.html", conf_list=configs)
+
+
+@app.route("/reprocess_sub", methods=["POST"])
+def acbot_reprocess_sub():
+    redis_client.set("reprocess-sub", request.form["sub"])
+    return redirect("/admin")
+
+
+@app.route("/process_submission", methods=["POST"])
+def acbot_process_submission():
+    redis_client.set("process-submission", request.form["subid"])
+    return redirect("/admin")
+
+
 if __name__ == "__main__":
     # if not os.path.isfile(DATABASE_FILE):
     #     acbotdb.generate_mapping(create_tables=True)
