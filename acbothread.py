@@ -58,5 +58,5 @@ class ACBotThread(Thread):
                                 process_comment(comment, self.conf)
                         else:
                             process_comment(comment, self.conf)
-        except RequestException as e:
+        except Exception as e:
             self.log.warning(e)

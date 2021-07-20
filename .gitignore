@@ -6,3 +6,4 @@
 /acbot.sqlite
 .vscode/
 __pycache__/
+acbotdb.sqlite

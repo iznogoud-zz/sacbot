@@ -29,19 +29,29 @@ class AdHocThread(Thread):
         _items_to_process = select(c for c in Comment if c.subreddit == sub)[:]
 
         for _item in _items_to_process:
-            _c = self.reddit.comment(_item.id)
-            process_comment(_c, _conf, reprocess=True)
+            try:
+                _c = self.reddit.comment(_item.id)
+                process_comment(_c, _conf, reprocess=True)
+            except Exception as e:
+                self.log.warning(e)
 
     @db_session
     def process_submission(self, subid):
         self.log.info(f"Forcing the processing of submission [{subid}]")
-        _submission = self.reddit.submission(subid)
-        _conf = select(c for c in Configuration if c.subreddit == _submission.subreddit.display_name)[:][0]
-        _items_to_process = _submission.comments
 
-        for _item in _items_to_process:
-            _c = self.reddit.comment(_item.id)
-            process_comment(_c, _conf)
+        try:
+            _submission = self.reddit.submission(subid)
+            _conf = select(c for c in Configuration if c.subreddit == _submission.subreddit.display_name)[:][0]
+            _items_to_process = _submission.comments
+
+            for _item in _items_to_process:
+                try:
+                    _c = self.reddit.comment(_item.id)
+                    process_comment(_c, _conf)
+                except Exception as e:
+                    self.log.warning(e)
+        except Exception as e:
+            self.log.warning(e)
 
     def run(self) -> None:
         while not self._stop_th.is_set():
