@@ -42,6 +42,13 @@ class Users(acbotdb.Entity):
     password = Required(str)
 
 
+class Streaks(acbotdb.Entity):
+    username = Required(str)
+    subreddit = Required(str)
+    streak = Required(Decimal)
+    date = Required(date)
+
+
 # sql_debug(True)
 
 acbotdb.generate_mapping(create_tables=True)
@@ -128,4 +135,12 @@ def get_last_24h():
             for c in Comment
             if c.date >= (datetime.now() - timedelta(days=1))
         ).order_by(-9)[:]
+        return data
+
+
+def get_streaks():
+    with db_session:
+        data = select((c.username, c.subreddit, c.date, c.streak,) for c in Streaks).order_by(
+            -3
+        )[:]
         return data

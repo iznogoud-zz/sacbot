@@ -8,7 +8,7 @@ from flask_redis import FlaskRedis
 from pony.orm import db_session
 from pony.orm.core import select
 
-from acbotdb import get_data, get_last_24h, get_sr_data, populate, add_new_configuration, Configuration, acbotdb
+from acbotdb import get_data, get_last_24h, get_sr_data, get_streaks, add_new_configuration, Configuration, acbotdb
 from config import DATABASE_FILE
 
 app = Flask(__name__)
@@ -20,6 +20,11 @@ redis_client = FlaskRedis(app)
 def acbot_today():
     today = date.today()
     return render_template("submissions.html", my_list=get_last_24h())
+
+
+@app.route("/streaks")
+def acbot_streaks():
+    return render_template("streaks.html", my_list=get_streaks())
 
 
 @app.route("/<subreddit>")

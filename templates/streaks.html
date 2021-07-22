@@ -58,40 +58,29 @@
                 <td><a href=config>
                         <button class="button" type="button">Configuration</button>
                     </a></td>
-                <td><a href=streaks>
-                        <button class="button" type="button">Streaks</button>
-                    </a></td>
+                <td><a href= />
+                    <button class="button" type="button">Submissions</button>
+                    </a>
+                </td>
             </tr>
         </tbody>
     </table>
     <table border="1">
         <tbody>
             <tr>
+                <th>User</th>
                 <th>Subreddit</th>
-                <th>Submission Title</th>
-                <th>Submission Author</th>
-                <th>Comment</th>
-                <th>Similarity</th>
-                <th>Action</th>
                 <th>Date</th>
+                <th>Streak</th>
             </tr>
-            {% for s_title, s_link, s_author, c_link, c_author, sim, action, sr_name, action_date in my_list %}
-            {% if action == "INVESTIGATE" %}
-            <tr bgcolor=#ebc634>
-                {% elif action == "IGNORE" %}
-            <tr bgcolor=#cccccc>
-                {% elif action == "CORRECTED" %}
-            <tr bgcolor=#85db6e>
-                {% else %}
-            <tr>
-                {% endif %}
-                <td>{{ sr_name }}</td>
-                <td><a href={{ s_link }} target="_blank" rel="noopener noreferrer">{{ s_title }} </a></td>
-                <td>{{ s_author }}</td>
-                <td><a href={{ c_link }} target="_blank" rel="noopener noreferrer">{{ c_author }}</td>
-                <td>{{ sim }}</td>
-                <td>{{ action }}</td>
-                <td>{{ action_date }}</td>
+            {% for s_user, s_sub, s_date, s_streak in my_list %}
+            <td><a href=https://www.reddit.com/user/{{ s_user }}/posts target=" _blank" rel="noopener
+                noreferrer"> {{ s_user }}</td> </a>
+            <td><a href=https://reddit.com/r/{{ s_sub }}/ target=" _blank" rel="noopener noreferrer">{{ s_sub }}
+                </a>
+            </td>
+            <td>{{ s_date }}</td>
+            <td>{{ s_streak }}</td>
             </tr>
 
             {% endfor %}

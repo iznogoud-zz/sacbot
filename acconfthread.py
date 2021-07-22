@@ -1,3 +1,4 @@
+from acbotsubthread import ACBotSubThread
 from acbotdb import Configuration
 from pony.orm.core import db_session, select
 from acbothread import ACBotThread
@@ -30,7 +31,8 @@ class ACConfThread(Thread):
                 self.log.info("New configuration. Refreshing threads.")
 
                 for _, th in self.bot_threads.items():
-                    th.update_conf()
+                    th[0].update_conf()
+                    th[1].update_conf()
 
                 self.redis.set("refresh-config", "False")
 
@@ -42,10 +44,15 @@ class ACConfThread(Thread):
             for c in _temp_conf:
                 th = ACBotThread(c.subreddit)
                 th.start()
-                self.bot_threads.update({c.subreddit: th})
+                th_sub = ACBotSubThread(c.subreddit)
+                th_sub.start()
+                self.bot_threads.update({c.subreddit: [th, th_sub]})
 
     def stop_threads(self):
         for th_name, th in self.bot_threads.items():
-            th.stop()
-            th.join()
+            th[0].stop()
+            th[0].join()
+
+            th[1].stop()
+            th[1].join()
             self.log.info(f"Thread {th_name} terminated.")
